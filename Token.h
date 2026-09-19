@@ -1,0 +1,26 @@
+
+#ifndef IRCOMPILER_TOKEN_H
+#define IRCOMPILER_TOKEN_H
+#include <iostream>
+#include <string>
+
+
+enum TOKEN {
+    LPAREN, RPAREN,
+    LBRACE, RBRACE,
+    COMMA, PLUS, MINUS,
+    STAR, SLASH, EQUAL,
+    NUMBER, IDENTIFIER,
+    STRING, TYPE, RETURN,
+    AND, OR, NOT, XOR, FUNC,
+    LESSTHAN, GREATERTHAN, END_OF_FILE
+};
+
+struct Tok {
+    std::string lex;
+    size_t col;
+    size_t lin;
+    TOKEN token_type;
+};
+
+#endif //IRCOMPILER_TOKEN_H
