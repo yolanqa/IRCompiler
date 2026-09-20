@@ -2,6 +2,12 @@
 #include "Lexer.h"
 #include <stdexcept>
 
+
+    char Lexer::peek() {
+        if (text[position]+1,text.size())
+            return text[position+1];
+    }
+
     Tok Lexer::scannerLex() {
 
         std::string identifier;
@@ -21,93 +27,96 @@
 
         return Tok{identifier, 0, 0, tok};*/
 
-
-        while(position<text.size()) {
-            if (text[position]== ' ' || text[position]='\n')
+    while (position<text.size()) {
+        switch (text[position]) {
+            case ' ':
+                position++; break;
+            case '\n':
                 position++;
-            else if (text[position]=='(') {
+                break;
+
+            case '(':
                 position++;
                 return Tok{"(", 0, 0, LPAREN};
-            }
-            else if (text[position]==')') {
+
+            case ')':
                 position++;
                 return Tok{")",0,0,RPAREN};
-            }
-            else if (text[position]=='+') {
+
+            case '+':
                 position++;
                 return Tok{"+",0,0,PLUS};
-            }
-            else if (text[position]=='-') {
+
+            case '-':
                 position++;
                 return Tok{"-",0,0,MINUS};
-            }
-            else if (text[position]=='*') {
+
+            case '*':
                 position++;
                 return Tok{"*",0,0,STAR};
-            }
-            else if(text[position]=='{') {
-                position++;
-                return Tok{"{",0,0,LBRACE};}
 
-            else if (text[position]=='}') {
+            case '{':
+                position++;
+                return Tok{"{",0,0,LBRACE};
+
+            case '}':
                 position++;
                 return Tok{"}",0,0,RBRACE};
-            }
-            else if(text[position]==',') {
+
+            case ',' :
                 position++;
                 return Tok{",",0,0,COMMA};
-            }
 
-            else if (text[position]=='/') {
+
+            case '/' :
                 position++;
                 return Tok{"/",0,0,SLASH};
-            }
 
-            else if (text[position]=='=') {
+
+            case '=' :
                 position++;
                 return Tok{"=",0,0,EQUAL};
-            }
 
-            else if (text[position]=='&') {
+
+            case '&' :
                 if (peek()=='&') {
                     position += 2;
                     return Tok{"&&",0,0,AND};
-                }
-                else {throw std::runtime_error("mesaj aici");}
-            }
+                }throw std::runtime_error("not AND");
 
-            else if (text[position]=='|') {
+
+            case '|' :
                 if (peek()=='|') {
                     position += 2;
                     return Tok{"||",0,0,OR};
                 }
-                else {throw std::runtime_error("mesaj aici");}
-            }
+                throw std::runtime_error("not OR");
 
-            else if (text[position]=='!') {
+
+            case '!' :
                 if (peek()=='=') {
                     position += 2;
                     return Tok{"!=",0,0,NOT};
                 }
-                else {throw std::runtime_error("mesaj aici");}
-            }
+                throw std::runtime_error("not NOT");
 
-            else if (text[position]=='^') {
+
+            case '^' :
                 position++;
                 return Tok{"^",0,0,XOR};
-            }
 
-            else if (text[position]=='<') {
+
+            case '<' :
                 position++;
                 return Tok{"<",0,0,LESSTHAN};
-            }
 
-            else if (text[position]=='>') {
+
+            case '>' :
                 position++;
                 return Tok{">",0,0,GREATERTHAN};
-            }
 
-            else if (text[position]=='"') {
+
+            case '"' : {
                 position++;
                 size_t start = position;
                 for (size_t i=position;i<text.size();i++) {
@@ -118,8 +127,20 @@
                 }
                 throw std::runtime_error("unterminated string");
             }
-            else{throw std::runtime_error("unexpected char");}
+            default:
+                if (isdigit(text[position])) {
+
+                    size_t start = position;
+                    while (position < text.size() && isdigit(text[position])) {
+                        position++;
+                    }
+                    return Tok{text.substr(start, position- start),0,0,NUMBER};
+
+                }
+                throw std::runtime_error("unexpected char");
         }
+    }
+        return Tok{"",0,0,END_OF_FILE};
 
         /// continue here
 

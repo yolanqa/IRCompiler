@@ -12,6 +12,7 @@ class Lexer {
     std::string text;
     std::vector<Tok> tokens;
     std::unordered_map<std::string, TOKEN> keywords;
+    char peek();
 public:
     Lexer(std::string text);
     Tok scannerLex();
