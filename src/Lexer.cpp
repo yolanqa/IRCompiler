@@ -31,6 +31,10 @@
                     return Tok{")",0,0,RPAREN};
 
                 case '+':
+                    if (peek() == '+') {
+                        position += 2;
+                        return Tok{"++", 0, 0, INCREMENT};
+                    }
                     position++;
                     return Tok{"+",0,0,PLUS};
 
@@ -53,6 +57,10 @@
                 case ',' :
                     position++;
                     return Tok{",",0,0,COMMA};
+
+                case ';' :
+                    position++;
+                    return Tok{";",0,0,SEMICOL};
 
 
                 case '/' :
