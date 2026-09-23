@@ -2,7 +2,7 @@
 #include "Lexer.h"
 #include <stdexcept>
 
-
+    Lexer::Lexer(std::string text) : position(0), text(text) {}
     char Lexer::peek() {
         if (position+1<text.size())
             return text[position+1];
@@ -10,22 +10,9 @@
     }
 
     Tok Lexer::scannerLex() {
-        std::string identifier;
 
-        /*while(position<text.size() && isalnum(text[position])) {
-            identifier += text[position];
-            position++;
-        }
 
-        TOKEN tok;
-        auto it = keywords.find(identifier);
-        if(it!=keywords.end()) {
-            tok = it->second;
-        }
-        else {
-            tok =  IDENTIFIER;}
 
-        return Tok{identifier, 0, 0, tok};*/
 
         while (position<text.size()) {
             switch (text[position]) {
@@ -74,6 +61,10 @@
 
 
                 case '=' :
+					if (peek()=='=') {
+                        position += 2;
+                        return Tok{"==",0,0,EQ};
+                    }
                     position++;
                     return Tok{"=",0,0,EQUAL};
 
@@ -91,7 +82,6 @@
                         return Tok{"||",0,0,OR};
                     }
                     throw std::runtime_error("not OR");
-
 
                 case '!' :
                     if (peek()=='=') {
@@ -127,16 +117,26 @@
                     }
                     throw std::runtime_error("unterminated string");
                 }
-                    //continue with identifier
+
                 default:
                     if (isdigit(text[position])) {
 
                         size_t start = position;
                         while (position < text.size() && isdigit(text[position])) {
-                            position++;
-                        }
+                            position++;}
                         return Tok{text.substr(start, position- start),0,0,NUMBER};
 
+                    }
+                    else if (isalpha(text[position])) {
+                        std::string identifier;
+                        while (position<text.size() && isalnum(text[position])) {
+                            identifier += text[position];
+                            position++;
+                        }
+                        auto it = keywords.find(identifier);
+                        if (it!= keywords.end())
+                            return Tok{identifier, 0,0,it->second };
+                        else return Tok{identifier, 0,0, IDENTIFIER};
                     }
                     throw std::runtime_error("unexpected char");
             }
