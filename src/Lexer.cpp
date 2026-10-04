@@ -39,6 +39,10 @@
                     return Tok{"+",0,0,PLUS};
 
                 case '-':
+                    if (peek() == '-') {
+                        position += 2;
+                        return Tok{"--", 0, 0, DECREMENT};
+                    }
                     position++;
                     return Tok{"-",0,0,MINUS};
 

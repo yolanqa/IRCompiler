@@ -4,6 +4,7 @@
 #include<vector>
 #include <memory>
 #include <string>
+#include "Token.h"
 
 class NumberNode;
 class IdentifierNode;
@@ -119,6 +120,17 @@ public:
     void accept(Visitor& vis) override{ vis.visit(*this);}
 
 };
+
+class UnNode:public AstNode {
+public:
+    std::string operation;
+    std::unique_ptr<AstNode> operand;
+
+    UnNode(const std::string &operation, std::unique_ptr<AstNode> operand): operation(operation), operand(std::move(operand) ){}
+    void accept(Visitor& vis) override{ vis.visit(*this);}
+};
+
+
 //apel
 class CallExprNode:public AstNode {
 public:
