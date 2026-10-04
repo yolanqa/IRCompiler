@@ -31,13 +31,13 @@ The AST is built from a hierarchy of node classes (expressions, statements, decl
 
 
 ## STRUCTURE
-
+```
 IRCompiler/
 ├── include/          # header files (.h)
 ├── src/              # implementation files (.cpp)
 ├── examples/         # sample programs written in the language
 └── tests/            # test cases
-
+```
 
 ## Status
 
