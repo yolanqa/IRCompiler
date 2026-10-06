@@ -17,6 +17,7 @@ class Assign;
 class ReturnNode;
 class IfNode;
 class WhileNode;
+class UnNode;
 //using visitor pattern for a verification -  semantic analysis
 struct Visitor {
     virtual void visit (NumberNode& nod)=0;
@@ -30,6 +31,7 @@ struct Visitor {
     virtual void visit (ReturnNode& nod) = 0;
     virtual void visit (IfNode& nod) = 0;
     virtual void visit (WhileNode& nod) = 0;
+    virtual void visit(UnNode& nod) = 0;
 
 
     virtual ~Visitor() = default;
@@ -96,7 +98,7 @@ public:
     std::unique_ptr<AstNode> right;
     std::unique_ptr<AstNode> left;
 
-    Binary_ExprNode(const std::string &operation,std::unique_ptr<AstNode> right,std::unique_ptr<AstNode> left): operation(operation), right(std::move(right)), left(std::move(left)) {}
+    Binary_ExprNode(const std::string &operation,std::unique_ptr<AstNode> left,std::unique_ptr<AstNode> right): operation(operation), right(std::move(left)), left(std::move(right)) {}
 
     void accept(Visitor& vis) override{ vis.visit(*this);}
 };
