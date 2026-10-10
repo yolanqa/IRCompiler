@@ -10,13 +10,13 @@
 
 class Lexer {
     size_t position;
-    std::string text;
+    std::string buffer;
     std::vector<Tok> tokens;
     std::unordered_map<std::string, TOKEN> keywords = {
         {"if", IF}, {"else", ELSE}, {"while", WHILE}, {"return", RETURN},{"func", FUNC}, {"int", INT}, {"void", VOID}, {"bool", BOOL}, {"float", FLOAT}};
     char peek();
 public:
-    Lexer(std::string text);
+    Lexer(std::string buffer);
     Tok scannerLex();
     std::vector<Tok> tokenize();
 };

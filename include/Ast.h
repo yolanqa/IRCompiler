@@ -127,9 +127,12 @@ class UnNode:public AstNode {
 public:
     std::string operation;
     std::unique_ptr<AstNode> operand;
+    bool isPostfix;
 
-    UnNode(const std::string &operation, std::unique_ptr<AstNode> operand): operation(operation), operand(std::move(operand) ){}
+    UnNode(const std::string &operation, std::unique_ptr<AstNode> operand, bool is_postfix = false): operation(operation),operand(std::move(operand)),isPostfix(is_postfix) {}
+
     void accept(Visitor& vis) override{ vis.visit(*this);}
+
 };
 
 

@@ -2,10 +2,10 @@
 #include "Lexer.h"
 #include <stdexcept>
 
-    Lexer::Lexer(std::string text) : position(0), text(text) {}
+    Lexer::Lexer(std::string text) : position(0), buffer(text) {}
     char Lexer::peek() {
-        if (position+1<text.size())
-            return text[position+1];
+        if (position+1<buffer.size())
+            return buffer[position+1];
         return '\0';
     }
 
@@ -14,8 +14,8 @@
 
 
 
-        while (position<text.size()) {
-            switch (text[position]) {
+        while (position<buffer.size()) {
+            switch (buffer[position]) {
                 case ' ':
                     position++; break;
                 case '\n':
@@ -92,15 +92,17 @@
                     if (peek()=='|') {
                         position += 2;
                         return Tok{"||",0,0,OR};
-                    }
-                    throw std::runtime_error("not OR");
+                    }throw std::runtime_error("not OR");
 
                 case '!' :
                     if (peek()=='=') {
                         position += 2;
-                        return Tok{"!=",0,0,NOT};
+                        return Tok{"!=",0,0,NEQ};
                     }
-                    throw std::runtime_error("not NOT");
+                    position++;
+                    return Tok{"+",0,0,NOT};
+
+
 
 
                 case '^' :
@@ -121,28 +123,28 @@
                 case '"' : {
                     position++;
                     size_t start = position;
-                    for (size_t i=position;i<text.size();i++) {
-                        if (text[i]=='"') {
+                    for (size_t i=position;i<buffer.size();i++) {
+                        if (buffer[i]=='"') {
                             position = i+1;
-                            return Tok{text.substr(start, i- start),0,0,STRING};
+                            return Tok{buffer.substr(start, i- start),0,0,STRING};
                         }
                     }
                     throw std::runtime_error("unterminated string");
                 }
 
                 default:
-                    if (isdigit(text[position])) {
+                    if (isdigit(buffer[position])) {
 
                         size_t start = position;
-                        while (position < text.size() && isdigit(text[position])) {
+                        while (position < buffer.size() && isdigit(buffer[position])) {
                             position++;}
-                        return Tok{text.substr(start, position- start),0,0,NUMBER};
+                        return Tok{buffer.substr(start, position- start),0,0,NUMBER};
 
                     }
-                    else if (isalpha(text[position])) {
+                    else if (isalpha(buffer[position])) {
                         std::string identifier;
-                        while (position<text.size() && isalnum(text[position])) {
-                            identifier += text[position];
+                        while (position<buffer.size() && isalnum(buffer[position])) {
+                            identifier += buffer[position];
                             position++;
                         }
                         auto it = keywords.find(identifier);

@@ -1,4 +1,4 @@
-// this is a combination of Recursive Descent and Predictive because we are recalling functions and we verify a token (LL(1)) for a good "prediction"
+// this is a combination of Recursive Descent and Predictive because we are calling functions and we check one token (LL(1)) for a good "prediction"
 
 #include "Ast.h"
 #include "Token.h"
@@ -6,10 +6,64 @@
 #include "Parser.h"
 // recursive descent parser with predictive (LL(1)) decisions
 
+// the expression functions form a chain ordered by operator precedence, from weakest to strongest: || < && < ==/!= < </> < +/- < * / < unary < postfix < atoms
+// each level calls the next one for its operands, so operators lower in the chain bind tighter
+
+    std::unique_ptr<AstNode> Parser::parseOr() {
+        auto left = parseAnd();
+        while (tokens[position].token_type == OR) {
+            std::string oper = tokens[position].lex;
+            position++;
+            auto right = parseAnd();
+            left = std::make_unique<Binary_ExprNode>(oper, std::move(left), std::move(right));
+        }
+        return left;
 
 
-    //parseExpr1 is for when we have an expression with + or - and we have to separate it in the ast
-    //parseExpr2 is for when we have a * or / expression - for example 7*8+2 we take the left part separate from the +2
+        // left holds the partial result
+        // each loop iteration wraps it in a new node (left-deep)
+    }
+
+    std::unique_ptr<AstNode> Parser::parseAnd() {
+        auto left = parseEq();
+        while (tokens[position].token_type == AND) {
+            std::string oper = tokens[position].lex;
+            position++;
+            auto right = parseEq();
+            left = std::make_unique<Binary_ExprNode>(oper, std::move(left), std::move(right));
+        }
+        return left;
+
+    }
+
+
+    std::unique_ptr<AstNode> Parser::parseEq() {
+        auto left = parseCompar();
+        while (tokens[position].token_type == EQ || tokens[position].token_type==NEQ) {
+            std::string oper = tokens[position].lex;
+            position++;
+            auto right = parseCompar();
+            left = std::make_unique<Binary_ExprNode>(oper, std::move(left), std::move(right));
+        }
+        return left;
+
+    }
+
+    std::unique_ptr<AstNode> Parser::parseCompar() {
+        auto left = parseExpr1();
+        while (tokens[position].token_type == LESSTHAN || tokens[position].token_type == GREATERTHAN) {
+            std::string oper = tokens[position].lex;
+            position++;
+            auto right = parseExpr1();
+            left = std::make_unique<Binary_ExprNode>(oper, std::move(left), std::move(right));
+        }
+        return left;
+
+    }
+
+
+    // parseExpr1: handles + and -, building a left-deep tree
+    // parseExpr2: handles * and /, in 7*8+2 it consumes 7*8 as one node and stops at '+' which parseExpr1 then handles.
     //parseExpr3 when we have a single atom and we create a node
 
 
@@ -32,6 +86,8 @@
 
         return left;
     }
+
+
     std::unique_ptr<AstNode> Parser::parseExpr2(){
 
         auto left = parseUn();
@@ -44,17 +100,28 @@
         return left;
 
     }
+
+
+
     std::unique_ptr<AstNode> Parser::parseUn() {
-        if (tokens[position].token_type == MINUS || tokens[position].token_type== NOT) {
+        if (tokens[position].token_type == MINUS || tokens[position].token_type== NOT || tokens[position].token_type == PLUS || tokens[position].token_type == INCREMENT || tokens[position].token_type == DECREMENT) {
              std::string op = tokens[position].lex;
             position++;
             auto operand = parseUn();
             return std::make_unique<UnNode>(op, std::move(operand));
         }
-        return parseExpr3();
+        return parsePostfix();
+    }
 
-//todo
-// continue w x++ or ++x and ! is separte from != ---- Token.h, exception for Rparen
+// when we have an increment like this x++ +1
+    std::unique_ptr<AstNode> Parser::parsePostfix() {
+        auto left = parseExpr3();
+        if (tokens[position].token_type == INCREMENT || tokens[position].token_type == DECREMENT) {
+            std::string oper = tokens[position].lex;
+            position++;
+            left = std::make_unique<UnNode>(oper, std::move(left), true);
+        }
+        return left;
 
     }
     std::unique_ptr<AstNode> Parser::parseExpr3(){
@@ -73,13 +140,34 @@
 
         if (tokens[position].token_type == LPAREN) {
             position++;
-            auto e = parseExpr1(); // ex: 7+(7*8) for 7*8 we call the function to revaluate this expression
+            auto e = parseOr(); // ex: 7+(7*8) for 7*8 we call the function and we restart with parseOr() this expression
             if (tokens[position].token_type==RPAREN) position++;
             return e;
         }
         throw std::runtime_error("number, identifier, LPAREN or RPAREN - expected");
 
+    }
 
+//we have to take every node to see how we parse everything
+
+    Tok Parser::expect(TOKEN type) {
+        if (tokens[position].token_type != type)
+            throw std::runtime_error("unexpected token");
+        position++;
+        return tokens[position];
+    }
+
+    std::unique_ptr<AstNode> Parser::parseBlock() {
+        expect(LBRACE);
+        std::vector<std::unique_ptr<AstNode>> statements;
+        while (tokens[position].token_type != RBRACE) {
+            if (tokens[position].token_type == END_OF_FILE)
+                throw std::runtime_error("'}' expected");
+            statements.push_back(parseStatement());
+        }
+
+
+        return std::make_unique<BlockNode>(std::move(statements));
 
     }
 
