@@ -6,7 +6,7 @@
 
 int main() {
     try {
-        Lexer lexer{"x++ +1 == 4|| 4<6"};
+        Lexer lexer{"x++ +1 == 4|| 4<6 return; }"};
         std::vector<Tok> tokens = lexer.tokenize();
 
 

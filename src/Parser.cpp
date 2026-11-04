@@ -9,6 +9,14 @@
 // the expression functions form a chain ordered by operator precedence, from weakest to strongest: || < && < ==/!= < </> < +/- < * / < unary < postfix < atoms
 // each level calls the next one for its operands, so operators lower in the chain bind tighter
 
+    Tok Parser::expect(TOKEN type) {
+        if (tokens[position].token_type != type)
+            throw std::runtime_error("unexpected token");
+        Tok t = tokens[position];
+        position++;
+        return t;}
+
+
     std::unique_ptr<AstNode> Parser::parseOr() {
         auto left = parseAnd();
         while (tokens[position].token_type == OR) {
@@ -141,7 +149,7 @@
         if (tokens[position].token_type == LPAREN) {
             position++;
             auto e = parseOr(); // ex: 7+(7*8) for 7*8 we call the function and we restart with parseOr() this expression
-            if (tokens[position].token_type==RPAREN) position++;
+            expect(RPAREN);
             return e;
         }
         throw std::runtime_error("number, identifier, LPAREN or RPAREN - expected");
@@ -150,14 +158,10 @@
 
 //we have to take every node to see how we parse everything
 
-    Tok Parser::expect(TOKEN type) {
-        if (tokens[position].token_type != type)
-            throw std::runtime_error("unexpected token");
-        position++;
-        return tokens[position];
-    }
 
-    std::unique_ptr<AstNode> Parser::parseBlock() {
+
+
+    std::unique_ptr<BlockNode> Parser::parseBlock() {
         expect(LBRACE);
         std::vector<std::unique_ptr<AstNode>> statements;
         while (tokens[position].token_type != RBRACE) {
@@ -165,9 +169,84 @@
                 throw std::runtime_error("'}' expected");
             statements.push_back(parseStatement());
         }
-
-
+        expect(RBRACE);
         return std::make_unique<BlockNode>(std::move(statements));
-
     }
 
+    std::unique_ptr<AstNode> Parser::parseReturn() {
+        expect(RETURN);
+        std::unique_ptr<AstNode> returnline = nullptr;
+        if (tokens[position].token_type == SEMICOL)
+            returnline = parseOr();
+
+        expect(SEMICOL);
+
+        return std::make_unique<ReturnNode>(std::move(returnline));
+    }
+
+    std::unique_ptr<AstNode> Parser::parseIf() {
+        expect(IF);
+        expect(LPAREN);
+        auto cond = parseOr();
+        expect(RPAREN);
+        auto thenblock = parseBlock();
+
+        // we could have the else block optional
+        std::unique_ptr<BlockNode> elseBlock = nullptr;
+        if (tokens[position].token_type == ELSE) {
+            expect(ELSE);
+            elseBlock = parseBlock();
+        }
+        return std::make_unique<IfNode> (std::move(cond), std::move(thenblock), std::move(elseBlock));
+    }
+
+    std::unique_ptr<AstNode> Parser::parseWhile() {
+        expect(WHILE);
+        expect(LPAREN);
+        auto cond = parseOr();
+        expect(RPAREN);
+
+        auto block = parseBlock();
+        return std::make_unique<WhileNode>(std::move(cond), std::move(block));
+    }
+    std::unique_ptr<AstNode> Parser::parseAssign() {
+
+        auto expr = expect(IDENTIFIER).lex;
+        expect(EQUAL);
+        auto value = parseOr();
+        expect(SEMICOL);
+        return std::make_unique<Assign>(std::move(value), expr);
+    }
+
+    std::unique_ptr<DeclVar> Parser::parseDeclVar() {
+        std::string type = tokens[position].lex;
+        position++;
+        std::string expr = expect(IDENTIFIER).lex;
+        std::unique_ptr<AstNode> initial = nullptr;
+        if (tokens[position].token_type == EQUAL) {
+            expect(EQUAL);
+            initial = parseOr();
+        }
+        expect(SEMICOL);
+        return std::make_unique<DeclVar>(std::move(initial), expr, type);
+    }
+
+
+
+    std::unique_ptr<AstNode> Parser::parseStatement() {
+        if (tokens[position].token_type == IF) return parseIf();
+        if (tokens[position].token_type == WHILE) return parseWhile();
+        if (tokens[position].token_type == RETURN) return parseReturn();
+        if (tokens[position].token_type == LBRACE) return parseBlock();
+        if (tokens[position].token_type == IDENTIFIER && tokens[position + 1].token_type == EQUAL) {
+            return parseAssign();// x = 5;
+    }
+
+        if (tokens[position].token_type == INT || tokens[position].token_type == FLOAT || tokens[position].token_type == BOOL) return parseDeclVar();
+
+
+
+        auto expression = parseOr();
+        expect(SEMICOL);
+        return expression;
+    }

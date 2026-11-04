@@ -26,8 +26,15 @@ public:
     std::unique_ptr<AstNode> parsePostfix();
     std::unique_ptr<AstNode> parseExpr3();
     Tok expect(TOKEN type);
+    std::unique_ptr<DeclVar> parseDeclVar();
     std::unique_ptr<AstNode> parseStatement();
-    std::unique_ptr<AstNode> parseBlock();
+    std::unique_ptr<AstNode> parseAssign();
+    std::unique_ptr<BlockNode> parseBlock();
+    std::unique_ptr<AstNode> parseReturn();
+    std::unique_ptr<AstNode> parseIf();
+    std::unique_ptr<AstNode> parseWhile();
+
+
 };
 
 #endif //IRCOMPILER_PARSER_H
