@@ -10,7 +10,8 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
 
 add_executable(IRCompiler ${SOURCES}
         include/ast.h
-        include/Ast.h
+        include/ast.h
         include/Parser.h
-        src/Parser.cpp)
+        src/Parser.cpp
+        src/Codegen.cpp)
 target_include_directories(IRCompiler PRIVATE ${CMAKE_SOURCE_DIR}/include)

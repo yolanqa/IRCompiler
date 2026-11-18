@@ -40,7 +40,8 @@ class AstNode {
 public:
     AstNode() = default;
 
-    virtual void accept(Visitor& vis )=0;
+    virtual llvm::Value* codegen() = 0;
+    virtual accept() = 0;
     virtual ~AstNode(){};
 };
 
@@ -79,6 +80,7 @@ public:
     DeclFunct(std::unique_ptr<BlockNode> function_body, std::string return_type, const std::string &name, std::vector<Parameter> param)
         : function_body(std::move(function_body)), return_type(std::move(return_type)), name(name), param(std::move(param)) {}
     void accept(Visitor& vis) override{ vis.visit(*this);}
+    llvm:Value* codegen() override;
 };
 
 
@@ -90,6 +92,7 @@ public:
 
     Assign(std::unique_ptr<AstNode> value, const std::string &var): value(std::move(value)),var(var) {}
     void accept(Visitor& vis) override{ vis.visit(*this);}
+    llvm:Value* codegen() override;
 };
 
 class Binary_ExprNode:public AstNode{
@@ -99,8 +102,8 @@ public:
     std::unique_ptr<AstNode> left;
 
     Binary_ExprNode(const std::string &operation,std::unique_ptr<AstNode> left,std::unique_ptr<AstNode> right): operation(operation), right(std::move(left)), left(std::move(right)) {}
-
     void accept(Visitor& vis) override{ vis.visit(*this);}
+    llvm:Value* codegen() override;
 };
 
 class NumberNode:public AstNode{
@@ -108,8 +111,9 @@ public:
     std::string value;
 
     explicit NumberNode(const std::string &value): value(value) {}
-
     void accept(Visitor& vis) override{ vis.visit(*this);}
+
+    llvm:Value* codegen() override;
 
 };
 
@@ -120,6 +124,7 @@ public:
     explicit IdentifierNode(const std::string &name): name(name) {}
 
     void accept(Visitor& vis) override{ vis.visit(*this);}
+    llvm:Value* codegen() override;
 
 };
 
@@ -132,6 +137,7 @@ public:
     UnNode(const std::string &operation, std::unique_ptr<AstNode> operand, bool is_postfix = false): operation(operation),operand(std::move(operand)),isPostfix(is_postfix) {}
 
     void accept(Visitor& vis) override{ vis.visit(*this);}
+    llvm:Value* codegen() override;
 
 };
 
@@ -145,6 +151,7 @@ public:
     CallExprNode(const std::string &function_name, std::vector<std::unique_ptr<AstNode>> arg): function_name(function_name), arg(std::move(arg)) {}
 
     void accept(Visitor& vis) override{ vis.visit(*this);}
+    llvm:Value* codegen() override;
 
 };
 
@@ -155,6 +162,7 @@ public:
     explicit ReturnNode(std::unique_ptr<AstNode> value): value(std::move(value)){}
 
     void accept(Visitor& vis) override{ vis.visit(*this);}
+    llvm:Value* codegen() override;
 
 
 };
@@ -168,6 +176,7 @@ public:
     IfNode(std::unique_ptr<AstNode> condition, std::unique_ptr<BlockNode> thenblock, std::unique_ptr<BlockNode> elseblock): condition(std::move(condition)), thenblock(std::move(thenblock)), elseblock(std::move(elseblock) ){}
 
     void accept(Visitor& vis) override{ vis.visit(*this);}
+    llvm:Value* codegen() override;
 
 
 };
@@ -182,6 +191,7 @@ public:
 
 
     void accept(Visitor& vis) override{ vis.visit(*this);}
+    llvm:Value* codegen() override;
 };
 
 
